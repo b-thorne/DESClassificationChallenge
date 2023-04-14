@@ -1,0 +1,22 @@
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python bytecode
+*.pyc
+
+# Ignore virtual environment files
+venv/
+env/
+
+# Ignore the output of Jupyter notebooks
+*.ipynb_output/
+*.nbconvert.ipynb
+
+# Ignore any files or directories that are created by Jupyter
+*.log
+*.pid
+*.sqlite
+*.csv
+*.json
+*.html
+*.txt
