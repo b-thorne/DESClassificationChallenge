@@ -37,3 +37,4 @@ class BinaryClassifierCNN(nn.Module):
         x = self.fc3(x)
         
         return nn.Sigmoid()(x)
+
