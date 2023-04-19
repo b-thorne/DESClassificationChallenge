@@ -38,3 +38,14 @@ For context, the dataset is about 56GB, and the simple CNN model used can be tra
 ### Other topics 
 
 - Generative modeling problems, e.g. current work by Peter / Zarija.
+
+
+## To-Do 
+
+- Pytorch data loader tuning 
+- Mmap 
+- Bias disable for pre batch norm layers 
+- Difference between gif and fits?
+- Make volumes nice 
+- Calculate normalizations over batches 
+- Do some data augmentation
