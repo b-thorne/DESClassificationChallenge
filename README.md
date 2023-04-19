@@ -48,4 +48,4 @@ For context, the dataset is about 56GB, and the simple CNN model used can be tra
 - Difference between gif and fits?
 - Make volumes nice 
 - Calculate normalizations over batches 
-- Do some data augmentation
+- Do some data augmentation  
