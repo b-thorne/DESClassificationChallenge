@@ -2,7 +2,7 @@ import os
 import numpy as np
 import torch
 from astropy.io import fits 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, random_split
 import pandas as pd 
 
 
@@ -52,14 +52,25 @@ class DESFitsDataset(Dataset):
         return stacked_tensor, target_label
 
 def load_labels(filepath):
-    df = pd.read_csv(filepath, use_cols=["ID", "OBJECT_TYPE"])
+    df = pd.read_csv(filepath, usecols=["ID", "OBJECT_TYPE"])
     return dict(zip(df["ID"], df["OBJECT_TYPE"]))
 
-def load_and_split_dataset(data_dir, labels_dict, train_proportion, test_proportion):
+def load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_length, batch_size, split_seed=1234, num_workers=0):
     # First load the target labels  
-    labels_dict = load_labels(data_dir)
+    labels_dict = load_labels(labels_path)
+    # load the feature dataset
     dataset = DESFitsDataset(data_dir, labels_dict)
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=ARGS.num_workers, pin_memory=True, drop_last=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=ARGS.num_workers, pin_memory=True, drop_last=True)
-    return train_data_loader, test_data_loader
+    # If we are requesting only a part of the dataset, then randomly select a subset of the 
+    # correct length.
+    if len(dataset) > trn_length + tst_length + val_length:
+        inds = torch.randperm(len(dataset))[:trn_length + tst_length + val_length]
+        dataset = torch.utils.data.Subset(dataset, inds)
+    # Define a generator to seed the random splitting function and split the dataset
+    generator = torch.Generator().manual_seed(split_seed)
+    trn_set, tst_set, val_set = random_split(dataset, [trn_length, tst_length, val_length], generator=generator)
+    # Define the data loaders to be returned with batching
+    trn_data_loader = DataLoader(trn_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
+    tst_data_loader = DataLoader(tst_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
+    val_data_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
+    return trn_data_loader, tst_data_loader, val_data_loader
 
