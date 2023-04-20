@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from astropy.io import fits 
 from torch.utils.data import Dataset
+import pandas as pd 
+
 
 def traverse_directory(directory, file_dict):
     with os.scandir(directory) as entries:
@@ -41,10 +43,23 @@ class DESFitsDataset(Dataset):
         srch_image = fits.getdata(srch_file).astype(np.float32)
         diff_image = fits.getdata(diff_file).astype(np.float32)
         temp_image = fits.getdata(temp_file).astype(np.float32)
-
+    
         stacked_image = np.stack((temp_image, srch_image, diff_image), axis=0)
         stacked_tensor = torch.from_numpy(stacked_image)
 
         target_label = torch.from_numpy(np.array(np.float32(self.labels_dict[file_id])))
         
         return stacked_tensor, target_label
+
+def load_labels(filepath):
+    df = pd.read_csv(filepath, use_cols=["ID", "OBJECT_TYPE"])
+    return dict(zip(df["ID"], df["OBJECT_TYPE"]))
+
+def load_and_split_dataset(data_dir, labels_dict, train_proportion, test_proportion):
+    # First load the target labels  
+    labels_dict = load_labels(data_dir)
+    dataset = DESFitsDataset(data_dir, labels_dict)
+    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=ARGS.num_workers, pin_memory=True, drop_last=True)
+    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=ARGS.num_workers, pin_memory=True, drop_last=True)
+    return train_data_loader, test_data_loader
+
