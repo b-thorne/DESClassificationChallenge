@@ -2,6 +2,8 @@ import argparse
 from torchinfo import summary
 from src.model import BinaryClassifierCNN
 from src.data import DESFitsDataset, load_and_split_dataset
+from src.train import do_training
+from src.platform import set_device
 
 import logging
 
@@ -9,6 +11,7 @@ import torch
 import torch.nn as nn 
 from torch.utils.data import Dataset, DataLoader, random_split
 import torch.optim as optim
+
 
 from pathlib import Path
 
@@ -21,19 +24,28 @@ parser.add_argument('--data-dir', type=Path, required=True, help='Path to DES da
 parser.add_argument('--labels-path', type=Path, required=True, help='Path to labels.')
 parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate')
 parser.add_argument('--batch-size', type=float, default=32, help='Batch size')
-parser.add_argument('--train-portion', type=float, default=0.5, help='Train proportion')
-parser.add_argument('--test-portion', type=float, default=0.05, help='Test proportion')
+parser.add_argument('--train-length', type=float, default=10_000, help='Train length')
+parser.add_argument('--test-length', type=float, default=1_000, help='Test length')
+parser.add_argument('--val-length', type=float, default=1_000, help='Val length')
+parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
 
 # Parse the command-line arguments
 ARGS = parser.parse_args()
 
 
 def main():
+
     # Check if DEBUG flag is set
     if ARGS.DEBUG:
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
         print('DEBUG mode enabled')
-        train_proportion = ARGS.train_proportion / 100
-        test_proportion = ARGS.test_proportion / 100
+        trn_length = 10_000
+        tst_length = 1_000
+        val_length = 1_000
+    else:
+        trn_length = ARGS.trn_length
+        tst_length = ARGS.tst_length
+        val_length = ARGS.val_length
         
     # Check the mode flag
     if ARGS.mode == 'training':
@@ -43,14 +55,25 @@ def main():
 
         learning_rate = ARGS.learning_rate
         batch_size = ARGS.batch_size
-        training_frac = ARGS.training_frac 
         data_dir = ARGS.data_dir
         labels_path = ARGS.labels_path
+        epochs = ARGS.epochs
     
-        train_dloader, test_dloader = load_and_split_dataset(data_dir, labels_path, train_proportion, test_proportion)
-       logging.debug("Reading input features from: {data_dir}") 
-       logging.debug("Reading labels from: {labels_path}")
-       print("Starting training ...")
+        trn, tst, val = load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_length, batch_size)
+        logging.debug(f"Reading input features from: {data_dir}") 
+        logging.debug(f"Reading labels from: {labels_path}")
+       
+        print("Starting training ...")
+        logging.debug(f"Learning rate: {learning_rate}" )
+        logging.debug(f"Batch size: {batch_size}")
+
+        metric = nn.BCELoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+        device = set_device()
+        logging.debug(f"Using device: {device}")
+        model = do_training(model, optimizer, metric, trn, tst, device, epochs)
+
     elif ARGS.mode == 'evaluation':
         print('Evaluation mode')
     else:
