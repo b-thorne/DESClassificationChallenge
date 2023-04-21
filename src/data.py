@@ -6,19 +6,6 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import pandas as pd 
 import logging
 
-def traverse_directory(directory, file_dict):
-    with os.scandir(directory) as entries:
-        for entry in entries:
-            if entry.is_file() and '.fits' in entry.name:
-                filename = entry.name
-                file_id = int(filename.split('.')[0][4:])
-                file_type = filename[:4]
-                full_path = entry.path
-
-                if file_type in file_dict:
-                    file_dict[file_type][file_id] = full_path
-            elif entry.is_dir():
-                traverse_directory(entry.path, file_dict)
 
 class DESFitsDataset(Dataset):
     def __init__(self, root_dir, labels_dict):
@@ -51,9 +38,26 @@ class DESFitsDataset(Dataset):
         
         return stacked_tensor, target_label
 
+
+def traverse_directory(directory, file_dict):
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if entry.is_file() and '.fits' in entry.name:
+                filename = entry.name
+                file_id = int(filename.split('.')[0][4:])
+                file_type = filename[:4]
+                full_path = entry.path
+
+                if file_type in file_dict:
+                    file_dict[file_type][file_id] = full_path
+            elif entry.is_dir():
+                traverse_directory(entry.path, file_dict)
+
+
 def load_labels(filepath):
     df = pd.read_csv(filepath, usecols=["ID", "OBJECT_TYPE"])
     return dict(zip(df["ID"], df["OBJECT_TYPE"]))
+
 
 def load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_length, batch_size, split_seed=1234, num_workers=0):
     # First load the target labels  
