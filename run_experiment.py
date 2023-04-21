@@ -16,15 +16,24 @@ import wandb
 parser = argparse.ArgumentParser(description='DES transient classification')
 
 parser.add_argument('--DEBUG', action='store_true', help='Set DEBUG flag')
-parser.add_argument('--mode', choices=['training', 'evaluation'], help='Set mode to training or evaluation')
-parser.add_argument('--data-dir', type=Path, required=True, help='Path to DES data directory.')
-parser.add_argument('--labels-path', type=Path, required=True, help='Path to labels.')
-parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate')
-parser.add_argument('--batch-size', type=float, default=32, help='Batch size')
-parser.add_argument('--train-length', type=int, default=10_000, help='Train length')
-parser.add_argument('--test-length', type=int, default=1_000, help='Test length')
-parser.add_argument('--val-length', type=int, default=1_000, help='Val length')
-parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
+parser.add_argument('--mode', choices=['training', 'evaluation'],
+                    help='Set mode to training or evaluation')
+parser.add_argument('--data-dir', type=Path, required=True,
+                    help='Path to DES data directory.')
+parser.add_argument('--labels-path', type=Path, required=True,
+                    help='Path to labels.')
+parser.add_argument('--learning-rate', type=float, default=0.001,
+                    help='Learning rate')
+parser.add_argument('--batch-size', type=float, default=32,
+                    help='Batch size')
+parser.add_argument('--train-length', type=int, default=10_000,
+                    help='Train length')
+parser.add_argument('--test-length', type=int, default=1_000,
+                    help='Test length')
+parser.add_argument('--val-length', type=int, default=1_000,
+                    help='Val length')
+parser.add_argument('--epochs', type=int, default=10,
+                    help='Number of epochs')
 
 ARGS = parser.parse_args()
 
@@ -34,7 +43,8 @@ def main():
     wandb.init(project='des_transient_classification', config=ARGS)
 
     if ARGS.DEBUG:
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+        logging.basicConfig(level=logging.DEBUG,
+                            format='%(asctime)s %(levelname)s: %(message)s')
 
     trn_length = ARGS.train_length
     tst_length = ARGS.test_length
@@ -51,7 +61,9 @@ def main():
         labels_path = ARGS.labels_path
         epochs = ARGS.epochs
 
-        trn, tst, val = load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_length, batch_size)
+        trn, tst, val = load_and_split_dataset(data_dir, labels_path,
+                                               trn_length, tst_length,
+                                               val_length, batch_size)
         logging.debug(f"Reading input features from: {data_dir}")
         logging.debug(f"Reading labels from: {labels_path}")
 
@@ -73,6 +85,7 @@ def main():
         print('Please specify a valid mode')
 
     return
+
 
 if __name__ == "__main__":
     main()

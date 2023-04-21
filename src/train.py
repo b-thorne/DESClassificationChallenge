@@ -1,8 +1,11 @@
-import torch 
-import logging
-from sklearn.metrics import roc_auc_score, precision_score, recall_score, det_curve
-import wandb 
+import torch
+from sklearn.metrics import roc_auc_score, precision_score, recall_score
+
 from .plotting import plot_mdr
+
+import logging
+import wandb
+
 
 def do_training(model, optimizer, metric, train, test, device, epochs):
     model.to(device)
@@ -24,7 +27,7 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
 
         model.eval()
         running_loss = 0.
-        
+
         true_labels = []
         y_scre = []
         for inputs, labels in test:
@@ -43,7 +46,8 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
         y_scre = torch.stack(y_scre).cpu().squeeze()
         y_pred = torch.round(y_scre)
 
-        # This is required because wandb has weird requirements for argument ro ROC curve plot.
+        # This is required because wandb has weird requirements for argument
+        # ro ROC curve plot.
         y_scre_per_class = torch.hstack(
                 [(1 - y_scre).unsqueeze(-1),
                     y_scre.unsqueeze(-1)]
@@ -54,7 +58,7 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
             "Train Loss": train_epoch_loss,
             "Test Loss": test_epoch_loss,
             "roc": wandb.plot.roc_curve(
-                                    y_true=y_true, 
+                                    y_true=y_true,
                                     y_probas=y_scre_per_class),
             "Test AUC": roc_auc_score(true_labels, y_scre),
             "Test Precision": precision_score(y_true, y_pred),
@@ -66,4 +70,3 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
         wandb.save(ckpt_filename)
 
     return model
-

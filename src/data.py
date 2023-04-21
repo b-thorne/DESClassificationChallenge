@@ -82,8 +82,13 @@ def load_and_split_dataset(data_dir, labels_path, trn_length,
                                     [trn_length, tst_length, val_length],
                                     generator=generator)
     # Define the data loaders to be returned with batching
-    trn_data_loader = DataLoader(trn_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
-    tst_data_loader = DataLoader(tst_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
-    val_data_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
+    trn_data_loader = DataLoader(trn_set, batch_size=batch_size,
+                                 shuffle=True, num_workers=num_workers,
+                                 pin_memory=True, drop_last=True)
+    tst_data_loader = DataLoader(tst_set, batch_size=batch_size,
+                                 shuffle=False, num_workers=num_workers,
+                                 pin_memory=True, drop_last=True)
+    val_data_loader = DataLoader(val_set, batch_size=batch_size,
+                                 shuffle=False, num_workers=num_workers,
+                                 pin_memory=True, drop_last=True)
     return trn_data_loader, tst_data_loader, val_data_loader
-
