@@ -42,21 +42,19 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
         logging.info(f"Test loss: {test_epoch_loss:.03f}")
 
         true_labels = torch.cat(true_labels).cpu().squeeze()
-        print(true_labels)
         predicted_labels = torch.cat(predicted_labels).cpu().squeeze()
 
         test_auc = roc_auc_score(true_labels, predicted_labels)
         test_precision = precision_score(true_labels, torch.round(predicted_labels))
         test_recall = recall_score(true_labels, torch.round(predicted_labels))
-        test_confusion_matrix = confusion_matrix(true_labels, torch.round(predicted_labels))
-
+        
         wandb.log({
-            "Train Loss": epoch_loss,
-            "Test Loss": epoch_loss,
+            "Train Loss": train_epoch_loss,
+            "Test Loss": test_epoch_loss,
+            "roc": wandb.plot.roc_curve(true_labels, predicted_labels),
             "Test AUC": test_auc,
             "Test Precision": test_precision,
             "Test Recall": test_recall,
-            "Test Confusion Matrix": wandb.plot.confusion_matrix(true_labels, torch.round(predicted_labels), ["0", "1"]),
         })
 
         # Save model checkpoint
