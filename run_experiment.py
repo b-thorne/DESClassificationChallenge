@@ -24,9 +24,9 @@ parser.add_argument('--data-dir', type=Path, required=True, help='Path to DES da
 parser.add_argument('--labels-path', type=Path, required=True, help='Path to labels.')
 parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate')
 parser.add_argument('--batch-size', type=float, default=32, help='Batch size')
-parser.add_argument('--train-length', type=float, default=10_000, help='Train length')
-parser.add_argument('--test-length', type=float, default=1_000, help='Test length')
-parser.add_argument('--val-length', type=float, default=1_000, help='Val length')
+parser.add_argument('--train-length', type=int, default=10_000, help='Train length')
+parser.add_argument('--test-length', type=int, default=1_000, help='Test length')
+parser.add_argument('--val-length', type=int, default=1_000, help='Val length')
 parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
 
 # Parse the command-line arguments
@@ -41,20 +41,15 @@ def main():
     # Check if DEBUG flag is set
     if ARGS.DEBUG:
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
-        print('DEBUG mode enabled')
-        trn_length = 1_000
-        tst_length = 100
-        val_length = 100
-    else:
-        trn_length = ARGS.trn_length
-        tst_length = ARGS.tst_length
-        val_length = ARGS.val_length
+
+    trn_length = ARGS.train_length
+    tst_length = ARGS.test_length
+    val_length = ARGS.val_length
         
     # Check the mode flag
     if ARGS.mode == 'training':
         print('Training mode')
         model = BinaryClassifierCNN()
-        print(summary(model))
         wandb.watch(model, log='all')
 
         learning_rate = ARGS.learning_rate
@@ -77,7 +72,7 @@ def main():
         device = set_device()
         logging.debug(f"Using device: {device}")
         model = do_training(model, optimizer, metric, trn, tst, device, epochs)
-        wandb.save('final_model.pt')
+        wandb.save('checkpoints/final_model.pt')
 
     elif ARGS.mode == 'evaluation':
         print('Evaluation mode')

@@ -4,7 +4,7 @@ import torch
 from astropy.io import fits 
 from torch.utils.data import Dataset, DataLoader, random_split
 import pandas as pd 
-
+import logging
 
 def traverse_directory(directory, file_dict):
     with os.scandir(directory) as entries:
@@ -65,6 +65,7 @@ def load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_le
     if len(dataset) > trn_length + tst_length + val_length:
         inds = torch.randperm(len(dataset))[:trn_length + tst_length + val_length]
         dataset = torch.utils.data.Subset(dataset, inds)
+    logging.debug(f"Samples in dataset: {len(dataset)}")
     # Define a generator to seed the random splitting function and split the dataset
     generator = torch.Generator().manual_seed(split_seed)
     trn_set, tst_set, val_set = random_split(dataset, [trn_length, tst_length, val_length], generator=generator)
