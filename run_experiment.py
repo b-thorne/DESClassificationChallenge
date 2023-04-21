@@ -1,7 +1,7 @@
 import argparse
 from torchinfo import summary
 from src.model import BinaryClassifierCNN
-from src.data import DESFitsDataset, load_and_split_dataset
+from src.data import load_and_split_dataset
 from src.train import do_training
 from src.platform import set_device
 
@@ -12,8 +12,8 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
 import torch.optim as optim
 
-
 from pathlib import Path
+import wandb
 
 # Create the argparse object
 parser = argparse.ArgumentParser(description='DES transient classification')
@@ -35,6 +35,9 @@ ARGS = parser.parse_args()
 
 def main():
 
+    # Initialize W&B
+    wandb.init(project='des_transient_classification', config=ARGS)
+
     # Check if DEBUG flag is set
     if ARGS.DEBUG:
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -52,6 +55,7 @@ def main():
         print('Training mode')
         model = BinaryClassifierCNN()
         print(summary(model))
+        wandb.watch(model, log='all')
 
         learning_rate = ARGS.learning_rate
         batch_size = ARGS.batch_size
@@ -73,6 +77,7 @@ def main():
         device = set_device()
         logging.debug(f"Using device: {device}")
         model = do_training(model, optimizer, metric, trn, tst, device, epochs)
+        wandb.save('final_model.pt')
 
     elif ARGS.mode == 'evaluation':
         print('Evaluation mode')
