@@ -29,3 +29,15 @@ def plot_batch(batch, col_titles=["Template", "Search", "Diff"]):
         axes[0, col].set_title(title)
 
     return fig
+
+def plot_mdr(y_true, y_score, anchor_points=[[0.03, 0.04, 0.05], [0.037, 0.024, 0.015]]):
+    fpr, fnr, _ = det_curve(y_true, y_score)
+    fig, ax = plt.subplots(1, 1)
+    ax.set_xlabel("MDR")
+    ax.set_ylabel("FPR")
+    ax.plot(fpr, fnr, label="CNN")
+    ax.set_xlim(0, 0.1)
+    ax.set_ylim(0, 0.05)
+    ax.scatter(anchor_points[0], anchor_points[1], marker="s", color="k", label="Goldstein 2015")
+    ax.legend(loc=3, frameon=False)
+    return fig
