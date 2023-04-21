@@ -42,9 +42,9 @@ def main():
     if ARGS.DEBUG:
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
         print('DEBUG mode enabled')
-        trn_length = 10_000
-        tst_length = 1_000
-        val_length = 1_000
+        trn_length = 1_000
+        tst_length = 100
+        val_length = 100
     else:
         trn_length = ARGS.trn_length
         tst_length = ARGS.tst_length
