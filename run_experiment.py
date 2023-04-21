@@ -6,9 +6,7 @@ from src.platform import set_device
 
 import logging
 
-import torch
-import torch.nn as nn 
-from torch.utils.data import Dataset, DataLoader, random_split
+import torch.nn as nn
 import torch.optim as optim
 
 from pathlib import Path
@@ -41,7 +39,7 @@ def main():
     trn_length = ARGS.train_length
     tst_length = ARGS.test_length
     val_length = ARGS.val_length
-        
+
     if ARGS.mode == 'training':
         print('Training mode')
         model = BinaryClassifierCNN()
@@ -52,13 +50,13 @@ def main():
         data_dir = ARGS.data_dir
         labels_path = ARGS.labels_path
         epochs = ARGS.epochs
-    
+
         trn, tst, val = load_and_split_dataset(data_dir, labels_path, trn_length, tst_length, val_length, batch_size)
-        logging.debug(f"Reading input features from: {data_dir}") 
+        logging.debug(f"Reading input features from: {data_dir}")
         logging.debug(f"Reading labels from: {labels_path}")
-       
+
         print("Starting training ...")
-        logging.debug(f"Learning rate: {learning_rate}" )
+        logging.debug(f"Learning rate: {learning_rate}")
         logging.debug(f"Batch size: {batch_size}")
 
         metric = nn.BCELoss()
@@ -78,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-     

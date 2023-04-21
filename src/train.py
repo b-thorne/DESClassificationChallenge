@@ -26,7 +26,7 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
         running_loss = 0.
         
         true_labels = []
-        score = []
+        y_scre = []
         for inputs, labels in test:
             inputs, labels = inputs.to(device), labels.to(device)
             with torch.no_grad():
@@ -35,32 +35,35 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
             running_loss += loss.item()
 
             true_labels.extend(labels.squeeze())
-            score.extend(outputs.squeeze())
+            y_scre.extend(outputs.squeeze())
 
         test_epoch_loss = running_loss / len(test)
 
-        true_labels = torch.stack(true_labels).cpu().squeeze()
-        score = torch.stack(score).cpu().squeeze()
-        predicted_labels = torch.round(score)
+        y_true = torch.stack(true_labels).cpu().squeeze()
+        y_scre = torch.stack(y_scre).cpu().squeeze()
+        y_pred = torch.round(y_scre)
 
         # This is required because wandb has weird requirements for argument ro ROC curve plot.
-        per_class_score_for_wandb_roc_curve = torch.hstack(
-            [(1 - score).unsqueeze(-1), 
-            score.unsqueeze(-1)]
+        y_scre_per_class = torch.hstack(
+                [(1 - y_scre).unsqueeze(-1),
+                    y_scre.unsqueeze(-1)]
         )
         wandb.log({
-            "MDR": plot_mdr(true_labels, score),
+            "MDR": plot_mdr(y_true, y_scre),
             "Epoch": epoch,
             "Train Loss": train_epoch_loss,
             "Test Loss": test_epoch_loss,
-            "roc": wandb.plot.roc_curve(y_true=true_labels, y_probas=per_class_score_for_wandb_roc_curve),
-            "Test AUC": roc_auc_score(true_labels, score),
-            "Test Precision": precision_score(true_labels, predicted_labels),
-            "Test Recall": recall_score(true_labels, predicted_labels),
+            "roc": wandb.plot.roc_curve(
+                                    y_true=y_true, 
+                                    y_probas=y_scre_per_class),
+            "Test AUC": roc_auc_score(true_labels, y_scre),
+            "Test Precision": precision_score(y_true, y_pred),
+            "Test Recall": recall_score(y_true, y_pred),
         })
 
-        torch.save(model.state_dict(), f"checkpoints/model_checkpoint_epoch_{epoch + 1}.pt")
-        wandb.save(f"checkpoints/model_checkpoint_epoch_{epoch + 1}.pt")
+        ckpt_filename = f"checkpoints/model_checkpoint_epoch_{epoch + 1}.pt"
+        torch.save(model.state_dict(), ckpt_filename)
+        wandb.save(ckpt_filename)
 
     return model
 
