@@ -1,5 +1,4 @@
 import argparse
-from torchinfo import summary
 from src.model import BinaryClassifierCNN
 from src.data import load_and_split_dataset
 from src.train import do_training
@@ -29,16 +28,13 @@ parser.add_argument('--test-length', type=int, default=1_000, help='Test length'
 parser.add_argument('--val-length', type=int, default=1_000, help='Val length')
 parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
 
-# Parse the command-line arguments
 ARGS = parser.parse_args()
 
 
 def main():
 
-    # Initialize W&B
     wandb.init(project='des_transient_classification', config=ARGS)
 
-    # Check if DEBUG flag is set
     if ARGS.DEBUG:
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
@@ -46,7 +42,6 @@ def main():
     tst_length = ARGS.test_length
     val_length = ARGS.val_length
         
-    # Check the mode flag
     if ARGS.mode == 'training':
         print('Training mode')
         model = BinaryClassifierCNN()
