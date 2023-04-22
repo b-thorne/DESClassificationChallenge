@@ -1,4 +1,4 @@
-name: fairuni
+name: fairuniverse
 channels:
   - pytorch
   - conda-forge
