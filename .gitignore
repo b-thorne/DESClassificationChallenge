@@ -26,3 +26,4 @@ stamps_0.tar
 data
 wandb
 checkpoints
+logs
