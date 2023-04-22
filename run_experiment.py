@@ -5,6 +5,7 @@ from src.train import do_training
 from src.platform import set_device
 
 import logging
+import matplotlib.pyplot as plt
 
 import torch.nn as nn
 import torch.optim as optim
@@ -45,6 +46,7 @@ def main():
     wandb.init(project='des_transient_classification', config=ARGS)
 
     if ARGS.DEBUG:
+        plt.set_loglevel(level="warning")
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s %(levelname)s: %(message)s')
 
