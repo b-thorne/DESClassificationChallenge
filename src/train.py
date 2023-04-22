@@ -60,7 +60,7 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
             "roc": wandb.plot.roc_curve(
                                     y_true=y_true,
                                     y_probas=y_scre_per_class),
-            "Test AUC": roc_auc_score(true_labels, y_scre),
+            "Test AUC": roc_auc_score(y_true, y_scre),
             "Test Precision": precision_score(y_true, y_pred),
             "Test Recall": recall_score(y_true, y_pred),
         })
