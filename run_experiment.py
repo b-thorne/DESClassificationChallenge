@@ -37,6 +37,8 @@ parser.add_argument('--epochs', type=int, default=10,
                     help='Number of epochs')
 parser.add_argument('--num-workers', type=int, default=0,
                     help='Number of workers used for async data loading')
+parser.add_argument('--weight-decay', type=bool, default=False,
+                     help='Implement weight decay (L2 regularization)')
 
 ARGS = parser.parse_args()
 
@@ -65,6 +67,7 @@ def main():
         labels_path = ARGS.labels_path
         epochs = ARGS.epochs
         num_workers = ARGS.num_workers
+        weight_decay = ARGS.weight_decay
 
         trn, tst, val = load_and_split_dataset(data_dir, labels_path,
                                                trn_length, tst_length,
@@ -78,7 +81,7 @@ def main():
         logging.debug(f"Batch size: {batch_size}")
 
         metric = nn.BCELoss()
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
         device = set_device()
         logging.debug(f"Using device: {device}")
