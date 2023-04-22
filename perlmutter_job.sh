@@ -6,6 +6,7 @@
 #SBATCH -n 1
 #SBATCH -c 32
 #SBATCH --gpus-per-task=1
+#SBATCH -e logs/slurm-%j.out
 
 export SLURM_CPU_BIND="cores"
 srun /global/u1/b/bthorne/miniforge3/envs/fairuniverse/bin/python run_experiment.py --DEBUG \

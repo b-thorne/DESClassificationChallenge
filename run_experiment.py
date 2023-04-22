@@ -37,7 +37,7 @@ parser.add_argument('--epochs', type=int, default=10,
                     help='Number of epochs')
 parser.add_argument('--num-workers', type=int, default=0,
                     help='Number of workers used for async data loading')
-parser.add_argument('--weight-decay', type=bool, default=False,
+parser.add_argument('--weight-decay', action='store_true',
                      help='Implement weight decay (L2 regularization)')
 
 ARGS = parser.parse_args()
