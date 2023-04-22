@@ -34,6 +34,8 @@ parser.add_argument('--val-length', type=int, default=1_000,
                     help='Val length')
 parser.add_argument('--epochs', type=int, default=10,
                     help='Number of epochs')
+parser.add_argument('--num-workers', type=int, default=0,
+                    help='Number of workers used for async data loading')
 
 ARGS = parser.parse_args()
 
@@ -60,10 +62,12 @@ def main():
         data_dir = ARGS.data_dir
         labels_path = ARGS.labels_path
         epochs = ARGS.epochs
+        num_workers = ARGS.num_workers
 
         trn, tst, val = load_and_split_dataset(data_dir, labels_path,
                                                trn_length, tst_length,
-                                               val_length, batch_size)
+                                               val_length, batch_size, 
+                                               num_workers=num_workers)
         logging.debug(f"Reading input features from: {data_dir}")
         logging.debug(f"Reading labels from: {labels_path}")
 
