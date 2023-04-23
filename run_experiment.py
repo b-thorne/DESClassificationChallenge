@@ -25,7 +25,7 @@ parser.add_argument('--labels-path', type=Path, required=True,
                     help='Path to labels.')
 parser.add_argument('--learning-rate', type=float, default=0.001,
                     help='Learning rate')
-parser.add_argument('--batch-size', type=float, default=32,
+parser.add_argument('--batch-size', type=int, default=32,
                     help='Batch size')
 parser.add_argument('--train-length', type=int, default=10_000,
                     help='Train length')
