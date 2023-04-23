@@ -49,4 +49,6 @@ For context, the dataset is about 56GB, and the simple CNN model used can be tra
 - Make volumes nice 
 - Calculate normalizations over batches 
 - Do some data augmentation
-- Do  
+- plotly
+- podman
+- fix my github
