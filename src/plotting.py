@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from sklearn.metrics import det_curve
 import plotly.graph_objs as go
 import plotly.subplots as sp
