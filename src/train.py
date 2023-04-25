@@ -7,7 +7,7 @@ import logging
 import wandb
 
 
-def do_training(model, optimizer, metric, train, test, device, epochs):
+def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb=False):
     model.to(device)
     for epoch in range(epochs):
         logging.info(f"Epoch {epoch + 1} / {epochs}")
@@ -51,21 +51,23 @@ def do_training(model, optimizer, metric, train, test, device, epochs):
         y_scre_per_class = torch.hstack(
             [(1 - y_scre).unsqueeze(-1), y_scre.unsqueeze(-1)]
         )
-        wandb.log(
-            {
-                "MDR": plot_mdr(y_true, y_scre),
-                "Epoch": epoch,
-                "Train Loss": train_epoch_loss,
-                "Test Loss": test_epoch_loss,
-                "roc": wandb.plot.roc_curve(y_true=y_true, y_probas=y_scre_per_class),
-                "Test AUC": roc_auc_score(y_true, y_scre),
-                "Test Precision": precision_score(y_true, y_pred),
-                "Test Recall": recall_score(y_true, y_pred),
-            }
-        )
+        if log_wandb:
+            wandb.log(
+                {
+                    "MDR": plot_mdr(y_true, y_scre),
+                    "Epoch": epoch,
+                    "Train Loss": train_epoch_loss,
+                    "Test Loss": test_epoch_loss,
+                    "roc": wandb.plot.roc_curve(y_true=y_true, y_probas=y_scre_per_class),
+                    "Test AUC": roc_auc_score(y_true, y_scre),
+                    "Test Precision": precision_score(y_true, y_pred),
+                    "Test Recall": recall_score(y_true, y_pred),
+                }
+            )
 
         ckpt_filename = f"checkpoints/model_checkpoint_epoch_{epoch + 1}.pt"
         torch.save(model.state_dict(), ckpt_filename)
-        wandb.save(ckpt_filename)
+        if log_wandb:
+            wandb.save(ckpt_filename)
 
     return model

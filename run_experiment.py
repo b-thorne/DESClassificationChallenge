@@ -17,6 +17,7 @@ import wandb
 parser = argparse.ArgumentParser(description="DES transient classification")
 
 parser.add_argument("--DEBUG", action="store_true", help="Set DEBUG flag")
+parser.add_argument("--wandb", action="store_true", help="Track experiments with Weights & Biases")
 parser.add_argument(
     "--mode",
     choices=["training", "evaluation"],
@@ -48,8 +49,9 @@ ARGS = parser.parse_args()
 
 
 def main():
-    wandb.login(key=[os.environ["WANDB_API_KEY"]])
-    wandb.init(project="des_transient_classification", config=ARGS)
+    if ARGS.wandb:
+        wandb.login(key=os.environ["WANDB_API_KEY"])
+        wandb.init(project="des_transient_classification", config=ARGS)
 
     if ARGS.DEBUG:
         logging.basicConfig(
@@ -62,7 +64,8 @@ def main():
 
     if ARGS.mode == "training":
         model = BinaryClassifierCNN()
-        wandb.watch(model, log="all")
+        if ARGS.wandb:
+            wandb.watch(model, log="all")
 
         learning_rate = ARGS.learning_rate
         batch_size = ARGS.batch_size
@@ -95,7 +98,8 @@ def main():
         logging.debug(f"Using device: {device}")
 
         model = do_training(model, optimizer, metric, trn, tst, device, epochs)
-        wandb.save("checkpoints/final_model.pt")
+        if ARGS.wandb:
+            wandb.save("checkpoints/final_model.pt")
 
     elif ARGS.mode == "evaluation":
         print("Evaluation mode")
