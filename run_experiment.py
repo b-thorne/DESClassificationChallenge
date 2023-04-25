@@ -1,11 +1,11 @@
 import argparse
+import os
 from src.model import BinaryClassifierCNN
 from src.data import load_and_split_dataset
 from src.train import do_training
 from src.platform import set_device
 
 import logging
-import matplotlib.pyplot as plt
 
 import torch.nn as nn
 import torch.optim as optim
@@ -48,10 +48,10 @@ ARGS = parser.parse_args()
 
 
 def main():
+    wandb.login(key=[os.environ["WANDB_API_KEY"]])
     wandb.init(project="des_transient_classification", config=ARGS)
 
     if ARGS.DEBUG:
-        plt.set_loglevel(level="warning")
         logging.basicConfig(
             level=logging.DEBUG, format="%(asctime)s %(levelname)s: %(message)s"
         )
