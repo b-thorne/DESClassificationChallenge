@@ -27,3 +27,5 @@ data
 wandb
 checkpoints
 logs
+
+**slurm*
