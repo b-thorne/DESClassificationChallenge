@@ -1,6 +1,7 @@
 from sklearn.metrics import det_curve
 import plotly.graph_objs as go
 import plotly.subplots as sp
+import matplotlib.pyplot as plt
 
 def plot_batch(batch, col_titles=["Template", "Search", "Diff"]):
     (inputs, labels) = batch
