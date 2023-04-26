@@ -2,6 +2,7 @@ from sklearn.metrics import det_curve
 import plotly.graph_objs as go
 import plotly.subplots as sp
 
+
 def plot_batch(batch, col_titles=["Template", "Search", "Diff"]):
     (inputs, labels) = batch
     nbatch = inputs.shape[0]
@@ -38,12 +39,16 @@ def plot_mdr(
     fpr, fnr, _ = det_curve(y_true, y_score)
     fig = sp.make_subplots()
     fig.add_trace(
-        go.Scatter(x=fnr, y=fpr, mode='lines', name='MDR'),
+        go.Scatter(x=fnr, y=fpr, mode="lines", name="MDR"),
         secondary_y=False,
     )
     fig.add_trace(
-        go.Scatter(x=anchor_points[0], y=anchor_points[1], mode='markers', name='Goldstein'),
+        go.Scatter(
+            x=anchor_points[0], y=anchor_points[1], mode="markers", name="Goldstein"
+        ),
         secondary_y=False,
     )
-    fig.update_layout(title='Missed detection rate', xaxis_title='MDR', legend_title='Models')
+    fig.update_layout(
+        title="Missed detection rate", xaxis_title="MDR", legend_title="Models"
+    )
     return fig
