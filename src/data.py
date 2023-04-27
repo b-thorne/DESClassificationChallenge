@@ -1,10 +1,18 @@
 import os
-import numpy as np
-import torch
+
 from astropy.io import fits
 from torch.utils.data import Dataset, DataLoader, random_split
+
+import numpy as np
+import torch
 import pandas as pd
+
 import logging
+from tqdm import tqdm
+from multiprocessing import Pool, cpu_count, Manager
+
+import threading
+import time
 
 
 class DESFitsDataset(Dataset):
@@ -19,6 +27,8 @@ class DESFitsDataset(Dataset):
             & set(self.file_dict["diff"].keys())
             & set(self.file_dict["temp"].keys())
         )
+        self.mean = None
+        self.std = None
 
     def __len__(self):
         return len(self.file_ids)
@@ -34,10 +44,106 @@ class DESFitsDataset(Dataset):
         temp_image = fits.getdata(temp_file).astype(np.float32)
 
         stacked_image = np.stack((temp_image, srch_image, diff_image), axis=0)
+        if (self.mean is not None) and (self.std is not None):
+            stacked_image = (stacked_image - self.mean[:, None, None]) / self.std[
+                :, None, None
+            ]
         stacked_tensor = torch.from_numpy(stacked_image)
 
         target_label = torch.from_numpy(np.array(np.float32(self.labels_dict[file_id])))
         return stacked_tensor, target_label
+
+    def compute_mean_std(self):
+        num_workers = cpu_count()
+
+        # Compute the number of samples per worker
+        samples_per_worker = len(self) // num_workers
+
+        # Create a progress bar
+        progress_bar = tqdm(total=len(self), desc="Computing mean and std")
+
+        # Create a shared value to track progress using Manager
+        manager = Manager()
+        shared_value = manager.Value("i", 0)
+        lock = manager.Lock()
+
+        # Create a list of arguments for each worker
+        worker_args = [
+            (
+                self,
+                i * samples_per_worker,
+                (i + 1) * samples_per_worker,
+                shared_value,
+                lock,
+            )
+            for i in range(num_workers)
+        ]
+
+        # Handle the case when the dataset length is not evenly divisible by the number of workers
+        if len(self) % num_workers != 0:
+            worker_args[-1] = (
+                self,
+                (num_workers - 1) * samples_per_worker,
+                len(self),
+                shared_value,
+                lock,
+            )
+
+        # Start a new thread for updating the progress bar
+        progress_bar_thread = threading.Thread(
+            target=update_progress_bar, args=(shared_value, lock, progress_bar)
+        )
+        progress_bar_thread.start()
+
+        # Run the _compute_mean_std_chunk function in parallel using a process pool
+        with Pool(num_workers) as pool:
+            results = list(pool.imap_unordered(_compute_mean_std_chunk, worker_args))
+
+        progress_bar_thread.join()
+        progress_bar.close()
+
+        # Combine the results from all workers
+        mean = np.zeros(3)
+        std = np.zeros(3)
+        n_pixels = 0
+
+        for res_mean, res_std, res_n_pixels in results:
+            mean += res_mean
+            std += res_std
+            n_pixels += res_n_pixels
+
+        mean /= n_pixels
+        std /= n_pixels
+        std -= mean**2
+        std = np.sqrt(std)
+
+        return mean, std
+
+
+def _compute_mean_std_chunk(args):
+    dataset, start, end, shared_value, lock = args
+    mean = np.zeros(3)
+    std = np.zeros(3)
+    n_pixels = 0
+
+    for idx in range(start, end):
+        stacked_tensor, _ = dataset[idx]
+        stacked_array = stacked_tensor.numpy()
+        n_pixels += stacked_array.size // 3
+        mean += stacked_array.sum(axis=(1, 2))
+        std += (stacked_array**2).sum(axis=(1, 2))
+        with lock:
+            shared_value.value += 1
+
+    return mean, std, n_pixels
+
+
+def update_progress_bar(shared_value, lock, progress_bar):
+    while True:
+        with lock:
+            progress_bar.n = shared_value.value
+        progress_bar.refresh()
+        time.sleep(0.1)
 
 
 def traverse_directory(directory, file_dict):
@@ -74,6 +180,9 @@ def load_and_split_dataset(
     labels_dict = load_labels(labels_path)
     # load the feature dataset
     dataset = DESFitsDataset(data_dir, labels_dict)
+    mean, std = dataset.compute_mean_std()
+    dataset.mean = mean
+    dataset.std = std
     # If we are requesting only a part of the dataset, then randomly select
     # a subset of the correct length.
     total_dataset_size = trn_length + tst_length + val_length
