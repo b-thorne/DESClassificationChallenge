@@ -16,14 +16,16 @@ import wandb
 parser = argparse.ArgumentParser(description="DES transient classification")
 
 parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=str,
-        default="info",
-        choices=("critical", "error", "warning", "info", "debug"),
-        help="logging level",
-    )
-parser.add_argument("--wandb", action="store_true", help="Track experiments with Weights & Biases")
+    "-v",
+    "--verbosity",
+    type=str,
+    default="info",
+    choices=("critical", "error", "warning", "info", "debug"),
+    help="logging level",
+)
+parser.add_argument(
+    "--wandb", action="store_true", help="Track experiments with Weights & Biases"
+)
 parser.add_argument(
     "--mode",
     choices=["training", "evaluation"],
@@ -54,9 +56,10 @@ parser.add_argument(
 ARGS = parser.parse_args()
 LOGGER = logging.get_logger(__file__)
 
+
 def main():
     logging.set_all_loggers_level(ARGS.verbosity)
-    
+
     if ARGS.wandb:
         wandb.login(key=os.environ["WANDB_API_KEY"])
         wandb.init(project="des_transient_classification", config=ARGS)
