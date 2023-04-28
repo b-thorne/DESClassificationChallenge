@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: fairuniverse
+Version: 0.1.0
+Summary: Cosmology challenge for fairuniverse project
+Home-page: https://github.com/bthorne93/fairuniverse
+Author: Benjamin Thorne
+Author-email: bthorne@lbl.gov
+Requires-Python: >=3.6
