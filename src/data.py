@@ -7,14 +7,11 @@ import numpy as np
 import torch
 import pandas as pd
 
-import logging
-from tqdm import tqdm
-from multiprocessing import Pool, cpu_count, Manager
+from . import logging
+from multiprocessing import Pool, cpu_count
+from functools import lru_cache
 
-import threading
-import time
-
-
+LOGGER = logging.get_logger(__file__)
 class DESFitsDataset(Dataset):
     def __init__(self, root_dir, labels_dict):
         self.root_dir = root_dir
@@ -33,6 +30,7 @@ class DESFitsDataset(Dataset):
     def __len__(self):
         return len(self.file_ids)
 
+    @lru_cache(maxsize=None)
     def __getitem__(self, idx):
         file_id = self.file_ids[idx]
         srch_file = self.file_dict["srch"][file_id]
@@ -48,7 +46,7 @@ class DESFitsDataset(Dataset):
             stacked_image = (stacked_image - self.mean[:, None, None]) / self.std[
                 :, None, None
             ]
-        stacked_tensor = torch.from_numpy(stacked_image)
+        stacked_tensor = torch.from_numpy(stacked_image.astype(np.float32))
 
         target_label = torch.from_numpy(np.array(np.float32(self.labels_dict[file_id])))
         return stacked_tensor, target_label
@@ -59,22 +57,12 @@ class DESFitsDataset(Dataset):
         # Compute the number of samples per worker
         samples_per_worker = len(self) // num_workers
 
-        # Create a progress bar
-        progress_bar = tqdm(total=len(self), desc="Computing mean and std")
-
-        # Create a shared value to track progress using Manager
-        manager = Manager()
-        shared_value = manager.Value("i", 0)
-        lock = manager.Lock()
-
         # Create a list of arguments for each worker
         worker_args = [
             (
                 self,
                 i * samples_per_worker,
                 (i + 1) * samples_per_worker,
-                shared_value,
-                lock,
             )
             for i in range(num_workers)
         ]
@@ -85,22 +73,11 @@ class DESFitsDataset(Dataset):
                 self,
                 (num_workers - 1) * samples_per_worker,
                 len(self),
-                shared_value,
-                lock,
             )
-
-        # Start a new thread for updating the progress bar
-        progress_bar_thread = threading.Thread(
-            target=update_progress_bar, args=(shared_value, lock, progress_bar)
-        )
-        progress_bar_thread.start()
 
         # Run the _compute_mean_std_chunk function in parallel using a process pool
         with Pool(num_workers) as pool:
             results = list(pool.imap_unordered(_compute_mean_std_chunk, worker_args))
-
-        progress_bar_thread.join()
-        progress_bar.close()
 
         # Combine the results from all workers
         mean = np.zeros(3)
@@ -121,7 +98,7 @@ class DESFitsDataset(Dataset):
 
 
 def _compute_mean_std_chunk(args):
-    dataset, start, end, shared_value, lock = args
+    dataset, start, end = args
     mean = np.zeros(3)
     std = np.zeros(3)
     n_pixels = 0
@@ -132,18 +109,8 @@ def _compute_mean_std_chunk(args):
         n_pixels += stacked_array.size // 3
         mean += stacked_array.sum(axis=(1, 2))
         std += (stacked_array**2).sum(axis=(1, 2))
-        with lock:
-            shared_value.value += 1
 
     return mean, std, n_pixels
-
-
-def update_progress_bar(shared_value, lock, progress_bar):
-    while True:
-        with lock:
-            progress_bar.n = shared_value.value
-        progress_bar.refresh()
-        time.sleep(0.1)
 
 
 def traverse_directory(directory, file_dict):
@@ -189,7 +156,7 @@ def load_and_split_dataset(
     if len(dataset) > total_dataset_size:
         inds = torch.randperm(len(dataset))[:total_dataset_size]
         dataset = torch.utils.data.Subset(dataset, inds)
-    logging.debug(f"Samples in dataset: {len(dataset)}")
+    LOGGER.debug(f"Samples in dataset: {len(dataset)}")
     # Define a generator to seed the random splitting function and split
     # the dataset
     generator = torch.Generator().manual_seed(split_seed)

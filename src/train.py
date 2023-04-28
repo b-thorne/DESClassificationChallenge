@@ -2,15 +2,18 @@ import torch
 from sklearn.metrics import roc_auc_score, precision_score, recall_score
 
 from .plotting import plot_mdr
+from . import logging
 
-import logging
 import wandb
+
+LOGGER = logging.get_logger(__file__)
 
 
 def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb=False):
     model.to(device)
-    for epoch in range(epochs):
-        logging.info(f"Epoch {epoch + 1} / {epochs}")
+    LOGGER.timer.start("training")
+    for epoch in LOGGER.progressbar(range(1, epochs + 1), at_level="info", total=epochs, desc="Training"):
+        #logging.info(f"Epoch {epoch + 1} / {epochs}")
         model.train()
         running_loss = 0.0
 
@@ -69,5 +72,5 @@ def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb
         torch.save(model.state_dict(), ckpt_filename)
         if log_wandb:
             wandb.save(ckpt_filename)
-
+    LOGGER.info(f"Finished training after {epochs} steps and {LOGGER.timer.elapsed('training')}")
     return model

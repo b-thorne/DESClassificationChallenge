@@ -5,7 +5,7 @@ from src.data import load_and_split_dataset
 from src.train import do_training
 from src.platform import set_device
 
-import logging
+from src import logging
 
 import torch.nn as nn
 import torch.optim as optim
@@ -16,7 +16,14 @@ import wandb
 # Create the argparse object
 parser = argparse.ArgumentParser(description="DES transient classification")
 
-parser.add_argument("--DEBUG", action="store_true", help="Set DEBUG flag")
+parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=str,
+        default="info",
+        choices=("critical", "error", "warning", "info", "debug"),
+        help="logging level",
+    )
 parser.add_argument("--wandb", action="store_true", help="Track experiments with Weights & Biases")
 parser.add_argument(
     "--mode",
@@ -46,17 +53,14 @@ parser.add_argument(
 )
 
 ARGS = parser.parse_args()
-
+LOGGER = logging.get_logger(__file__)
 
 def main():
+    logging.set_all_loggers_level(ARGS.verbosity)
+    
     if ARGS.wandb:
         wandb.login(key=os.environ["WANDB_API_KEY"])
         wandb.init(project="des_transient_classification", config=ARGS)
-
-    if ARGS.DEBUG:
-        logging.basicConfig(
-            level=logging.DEBUG, format="%(asctime)s %(levelname)s: %(message)s"
-        )
 
     trn_length = ARGS.train_length
     tst_length = ARGS.test_length
@@ -91,11 +95,11 @@ def main():
 
         device = set_device()
 
-        logging.debug(f"Reading input features from: {data_dir}")
-        logging.debug(f"Reading labels from: {labels_path}")
-        logging.debug(f"Learning rate: {learning_rate}")
-        logging.debug(f"Batch size: {batch_size}")
-        logging.debug(f"Using device: {device}")
+        LOGGER.info(f"Reading input features from: {data_dir}")
+        LOGGER.info(f"Reading labels from: {labels_path}")
+        LOGGER.info(f"Learning rate: {learning_rate}")
+        LOGGER.info(f"Batch size: {batch_size}")
+        LOGGER.info(f"Using device: {device}")
 
         model = do_training(model, optimizer, metric, trn, tst, device, epochs)
         if ARGS.wandb:
