@@ -52,7 +52,9 @@ class Timer:
         self.time_start[name] = time.time()
 
     def elapsed(self, name="default"):
-        return str(datetime.timedelta(seconds=(time.time() - self.time_start[name])))[:-4]
+        return str(datetime.timedelta(seconds=(time.time() - self.time_start[name])))[
+            :-4
+        ]
 
     def start(self, name="default"):
         self.time_start[name] = time.time()
@@ -103,12 +105,10 @@ def get_logger(filepath, logging_level=None, progressbar_color="red"):
 
 
 def set_logger_level(logger, level):
-
     logger.setLevel(logging_levels[level])
 
 
 def set_all_loggers_level(level):
-
     os.environ["PYTHON_LOGGER_LEVEL"] = level
 
     loggerDict = logging.root.manager.loggerDict

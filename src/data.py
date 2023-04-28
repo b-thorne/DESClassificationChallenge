@@ -12,6 +12,8 @@ from multiprocessing import Pool, cpu_count
 from functools import lru_cache
 
 LOGGER = logging.get_logger(__file__)
+
+
 class DESFitsDataset(Dataset):
     def __init__(self, root_dir, labels_dict):
         self.root_dir = root_dir

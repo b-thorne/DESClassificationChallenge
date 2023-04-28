@@ -12,8 +12,10 @@ LOGGER = logging.get_logger(__file__)
 def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb=False):
     model.to(device)
     LOGGER.timer.start("training")
-    for epoch in LOGGER.progressbar(range(1, epochs + 1), at_level="info", total=epochs, desc="Training"):
-        #logging.info(f"Epoch {epoch + 1} / {epochs}")
+    for epoch in LOGGER.progressbar(
+        range(1, epochs + 1), at_level="info", total=epochs, desc="Training"
+    ):
+        # logging.info(f"Epoch {epoch + 1} / {epochs}")
         model.train()
         running_loss = 0.0
 
@@ -61,7 +63,9 @@ def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb
                     "Epoch": epoch,
                     "Train Loss": train_epoch_loss,
                     "Test Loss": test_epoch_loss,
-                    "roc": wandb.plot.roc_curve(y_true=y_true, y_probas=y_scre_per_class),
+                    "roc": wandb.plot.roc_curve(
+                        y_true=y_true, y_probas=y_scre_per_class
+                    ),
                     "Test AUC": roc_auc_score(y_true, y_scre),
                     "Test Precision": precision_score(y_true, y_pred),
                     "Test Recall": recall_score(y_true, y_pred),
@@ -72,5 +76,7 @@ def do_training(model, optimizer, metric, train, test, device, epochs, log_wandb
         torch.save(model.state_dict(), ckpt_filename)
         if log_wandb:
             wandb.save(ckpt_filename)
-    LOGGER.info(f"Finished training after {epochs} steps and {LOGGER.timer.elapsed('training')}")
+    LOGGER.info(
+        f"Finished training after {epochs} steps and {LOGGER.timer.elapsed('training')}"
+    )
     return model
