@@ -28,4 +28,4 @@ wandb
 checkpoints
 logs
 
-**slurm*
+**slurm*.out
