@@ -13,7 +13,6 @@ import torch.optim as optim
 from pathlib import Path
 import wandb
 
-# Create the argparse object
 parser = argparse.ArgumentParser(description="DES transient classification")
 
 parser.add_argument(
