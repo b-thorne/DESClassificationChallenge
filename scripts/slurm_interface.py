@@ -34,7 +34,7 @@ parser.add_argument(
 parser.add_argument(
     "--num-workers",
     type=int,
-    default=0,
+    default=128,
     help="Number of workers used for async data loading",
 )
 parser.add_argument(
